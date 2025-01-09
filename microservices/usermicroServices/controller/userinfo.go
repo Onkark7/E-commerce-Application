@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"user/models"
 )
 
@@ -61,5 +62,69 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 		"message": "User created successfully",
 		"userid":  fmt.Sprintf("%d", user.UserID),
 	})
+
+}
+func GetallUSer(w http.ResponseWriter, r *http.Request) {
+
+	pageParam := r.URL.Query().Get("page")
+	var page int
+	page = 1
+	if pageParam != "" {
+		p, err := strconv.Atoi(pageParam)
+		if err == nil && p > 0 {
+			page = p
+		}
+	}
+
+	users, err := models.GetAllUsers(page)
+	if err != nil {
+		http.Error(w, "Error retrieving users", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"page":   page,
+		"users":  users,
+		"status": "success",
+	})
+}
+
+func GetUserWithID(w http.ResponseWriter, r *http.Request) {
+	userIdParam := r.URL.Query().Get("id")
+	if userIdParam == "" {
+		http.Error(w, "Missing user ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.Atoi(userIdParam)
+	if err != nil || userID <= 0 {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	user, err := models.GetUserWithID(userID)
+	if err != nil {
+		http.Error(w, "Error retrieving user", http.StatusInternalServerError)
+		return
+	}
+
+	if user == nil {
+		http.Error(w, "Error retrieving user", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	response := map[string]interface{}{
+		"userID": userID,
+		"user":   user,
+		"status": "success",
+	}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
+	}
+}
+
+func UpdateUSer(w http.ResponseWriter, r *http.Request) {
 
 }
