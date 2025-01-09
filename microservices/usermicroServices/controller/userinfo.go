@@ -110,7 +110,7 @@ func GetUserWithID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user == nil {
-		http.Error(w, "Error retrieving user", http.StatusNotFound)
+		http.Error(w, " user Not FOUND", http.StatusNotFound)
 		return
 	}
 
@@ -126,5 +126,36 @@ func GetUserWithID(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateUSer(w http.ResponseWriter, r *http.Request) {
+
+	var user models.UserInfo
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+
+	err = json.Unmarshal(body, &user)
+
+	if user.UserID == 0 {
+		http.Error(w, "please send userID", http.StatusBadRequest)
+		return
+	}
+	Updatedata := models.UpdateUser(user.UserID, user.FirstName, user.LastName, user.MobileNo, user.Gender, user.Address, user.UserType)
+
+	if err != nil {
+		http.Error(w, "Error Updating user", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	response := map[string]interface{}{
+		"userID":  user.UserID,
+		"status":  "success",
+		"Message": Updatedata,
+	}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
+	}
 
 }

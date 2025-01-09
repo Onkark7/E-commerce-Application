@@ -134,4 +134,55 @@ func GetUserWithID(userID int) ([]UserInfo, error) {
 	return users, nil
 }
 
-func UpdateUser() {}
+func UpdateUser(userID int, fnmae string, lastname string, mobile_no string, gender string, address string, usertype string) string {
+	args := []interface{}{}
+	query := "UPDATE userinfo SET "
+
+	if fnmae != "" {
+		query += "first_name = ?, "
+		args = append(args, fnmae)
+	}
+
+	if lastname != "" {
+		query += "last_name = ?, "
+		args = append(args, lastname)
+	}
+
+	if mobile_no != "" {
+		query += "mobile_no = ?, "
+		args = append(args, mobile_no)
+	}
+	if gender != "" {
+		query += "gender = ?, "
+		args = append(args, gender)
+	}
+	if address != "" {
+		query += "address = ?, "
+		args = append(args, address)
+	}
+	if usertype != "" {
+		query += "usertype = ?, "
+		args = append(args, usertype)
+	}
+
+	if len(args) > 0 {
+		query = query[:len(query)-2] + " WHERE user_id = ?"
+		args = append(args, userID)
+	} else {
+		log.Println("No fields to update")
+		return ""
+	}
+
+	stmt, err := data.DB.Prepare(query)
+	if err != nil {
+		log.Fatalf("Failed to prepare query: %v", err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(args...)
+	if err != nil {
+		log.Fatalf("Failed to execute query: %v", err)
+	}
+
+	return "User updated successfully"
+}
