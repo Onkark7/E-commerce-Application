@@ -64,6 +64,21 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 	})
 
 }
+
+func Getusertype(w http.ResponseWriter, r *http.Request) {
+	//var usertype models.Usertype
+	usertype, err := models.Getusertype()
+	if err != nil {
+		http.Error(w, "Error retrieving users", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"user type": usertype,
+		"status":    "success",
+	})
+}
 func GetallUSer(w http.ResponseWriter, r *http.Request) {
 
 	pageParam := r.URL.Query().Get("page")
