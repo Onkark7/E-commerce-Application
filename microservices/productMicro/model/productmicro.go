@@ -105,3 +105,83 @@ func Updateproduct(product Product, ID int) (Product, error) {
 
 	return product, nil
 }
+
+func GetProducts() ([]Product, error) {
+	var products []Product
+
+	query := `SELECT id, name, description, price, stock, image, created_at, category_id FROM product`
+
+	rows, err := data.DB.Query(query)
+	if err != nil {
+		fmt.Println("Error executing query:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var product Product
+		err := rows.Scan(
+			&product.Id,
+			&product.Name,
+			&product.Description,
+			&product.Price,
+			&product.Stock,
+			&product.Image_url,
+			&product.CreatedAt,
+			&product.Category_id,
+		)
+		if err != nil {
+			fmt.Println("Error scanning row:", err)
+			continue
+		}
+		products = append(products, product)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println("Rows iteration error:", err)
+		return nil, err
+	}
+
+	return products, nil
+}
+
+func GetProductsWithID(id int) (Product, error) {
+	var product Product
+
+	Query := `Select name,description,price,stock,image,category_id from product Where id=?`
+	row := data.DB.QueryRow(Query, id)
+
+	err := row.Scan(&product.Name, &product.Description, &product.Price, &product.Stock, &product.Image_url, &product.Category_id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return product, nil
+		}
+		return product, err
+	}
+	return product, nil
+}
+
+func DeleteProductWIthID(id int) (int, error) {
+
+	var count int
+	Query := `SELECT COUNT(*) FROM product WHERE id = ?`
+	err := data.DB.QueryRow(Query, id).Scan(&count)
+
+	if err != nil {
+		return 0, err
+	}
+
+	if count > 0 {
+
+		query := `Delete from product Where id=? `
+
+		_, err := data.DB.Exec(query, id)
+
+		if err != nil {
+			fmt.Println("not Deleted for", id, err)
+			return 0, err
+		}
+		return id, err
+	}
+	return 0, err
+}
